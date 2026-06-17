@@ -1,0 +1,7 @@
+*.class
+hs_err_pid*.log
+replay_pid*.log
+violation-*.log
+# extracted JDK sources / JVMs, if any get unpacked here during investigation
+java.*/
+jdk.*/
