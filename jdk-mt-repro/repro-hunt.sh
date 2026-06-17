@@ -27,7 +27,8 @@ run "g1/probeC/space16k" -Xmx1g -Xms1g $META -XX:+UseG1GC -XX:+ParallelRefProcEn
     -Dmt.durationSec=240 -Dmt.threads=10 -Dmt.probeCThreads=10 -Dmt.probeCSpace=16384
 
 # Phase 2: G1, small young gen => very frequent collections, concurrent class unloading.
-run "g1/probeC/youngsmall" -Xmx1g -Xms1g $META -XX:+UseG1GC -XX:G1NewSizePercent=5 -XX:G1MaxNewSizePercent=10 \
+# (G1NewSizePercent is experimental, so UnlockExperimentalVMOptions must precede it.)
+run "g1/probeC/youngsmall" -Xmx1g -Xms1g $META -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=5 -XX:G1MaxNewSizePercent=10 \
     -XX:+ClassUnloadingWithConcurrentMark -XX:+ExplicitGCInvokesConcurrent \
     -Dmt.durationSec=240 -Dmt.threads=10 -Dmt.probeCThreads=10 -Dmt.probeCSpace=65536 -Dmt.sysgcMs=2
 

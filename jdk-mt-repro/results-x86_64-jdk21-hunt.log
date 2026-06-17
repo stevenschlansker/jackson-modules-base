@@ -1,0 +1,150 @@
+######## g1/probeC/space16k : -Xmx1g -Xms1g -XX:CompressedClassSpaceSize=512m -XX:MaxMetaspaceSize=1g -XX:+UseG1GC -XX:+ParallelRefProcEnabled -Dmt.durationSec=240 -Dmt.threads=10 -Dmt.probeCThreads=10 -Dmt.probeCSpace=16384 ########
+MethodType intern stress: G1 Young Generation+G1 Concurrent GC+G1 Old Generation | 21.0.11+10-LTS
+threads=10 decoy=5 pinned=1024 duration=240s probeB=true gcThread=true sysgcMs=0
+[   5s] probeA=3,285,632 (+656,127/s) probeC=1,055,857 (+210,850/s) link=833 (+166/s) decoys=909,424 | gc=11 collections / 250ms
+[  10s] probeA=13,956,138 (+2,016,662/s) probeC=5,890,230 (+913,667/s) link=2,069 (+234/s) decoys=3,225,872 | gc=25 collections / 671ms
+[  15s] probeA=28,317,890 (+2,861,084/s) probeC=12,307,947 (+1,278,509/s) link=3,528 (+291/s) decoys=6,476,684 | gc=46 collections / 1173ms
+[  20s] probeA=45,231,350 (+3,373,243/s) probeC=19,314,857 (+1,397,467/s) link=5,154 (+324/s) decoys=10,099,891 | gc=66 collections / 1645ms
+[  25s] probeA=61,900,787 (+3,327,368/s) probeC=25,510,887 (+1,236,783/s) link=6,908 (+350/s) decoys=12,873,144 | gc=94 collections / 2240ms
+[  30s] probeA=79,257,665 (+3,446,160/s) probeC=32,504,254 (+1,388,514/s) link=8,668 (+349/s) decoys=16,450,489 | gc=119 collections / 2755ms
+[  35s] probeA=94,374,884 (+3,021,584/s) probeC=38,607,304 (+1,219,859/s) link=10,764 (+419/s) decoys=19,467,498 | gc=143 collections / 3282ms
+[  40s] probeA=109,716,032 (+3,055,674/s) probeC=44,346,672 (+1,143,177/s) link=12,332 (+312/s) decoys=22,127,667 | gc=167 collections / 3834ms
+[  45s] probeA=125,854,187 (+3,225,055/s) probeC=51,072,473 (+1,344,087/s) link=14,242 (+382/s) decoys=24,782,606 | gc=192 collections / 4386ms
+[  50s] probeA=140,021,190 (+2,827,745/s) probeC=56,563,293 (+1,095,972/s) link=15,683 (+288/s) decoys=27,514,366 | gc=218 collections / 5091ms
+[  55s] probeA=156,575,596 (+3,308,229/s) probeC=61,983,324 (+1,083,138/s) link=17,478 (+359/s) decoys=30,364,080 | gc=246 collections / 5677ms
+[  60s] probeA=173,229,413 (+3,327,397/s) probeC=67,552,369 (+1,112,683/s) link=19,244 (+353/s) decoys=33,887,385 | gc=269 collections / 6276ms
+[  66s] probeA=190,091,135 (+3,364,293/s) probeC=73,782,205 (+1,242,993/s) link=21,219 (+394/s) decoys=36,745,444 | gc=293 collections / 6833ms
+[  71s] probeA=204,805,924 (+2,942,035/s) probeC=79,315,570 (+1,106,326/s) link=22,947 (+345/s) decoys=39,473,361 | gc=320 collections / 7502ms
+[  76s] probeA=220,660,749 (+3,166,851/s) probeC=84,917,397 (+1,118,912/s) link=24,614 (+333/s) decoys=42,273,686 | gc=347 collections / 8124ms
+[  81s] probeA=235,807,269 (+3,027,543/s) probeC=89,546,065 (+925,195/s) link=26,260 (+329/s) decoys=44,989,445 | gc=370 collections / 8768ms
+[  86s] probeA=252,669,163 (+3,358,945/s) probeC=96,154,503 (+1,316,423/s) link=28,003 (+347/s) decoys=47,866,359 | gc=397 collections / 9296ms
+[  91s] probeA=267,829,363 (+3,029,576/s) probeC=101,934,686 (+1,155,097/s) link=29,667 (+333/s) decoys=50,822,910 | gc=423 collections / 9977ms
+[  96s] probeA=285,180,872 (+3,462,001/s) probeC=108,014,817 (+1,213,117/s) link=31,504 (+367/s) decoys=53,838,347 | gc=447 collections / 10521ms
+[ 101s] probeA=300,927,926 (+3,140,648/s) probeC=112,206,639 (+836,032/s) link=33,303 (+359/s) decoys=56,018,980 | gc=473 collections / 11256ms
+[ 106s] probeA=315,880,686 (+2,983,755/s) probeC=117,742,409 (+1,104,638/s) link=35,363 (+411/s) decoys=59,110,212 | gc=498 collections / 11897ms
+[ 111s] probeA=331,409,140 (+3,102,556/s) probeC=122,834,660 (+1,017,422/s) link=37,514 (+430/s) decoys=61,925,458 | gc=522 collections / 12499ms
+[ 116s] probeA=347,739,341 (+3,260,815/s) probeC=128,653,236 (+1,161,853/s) link=39,354 (+367/s) decoys=64,670,064 | gc=549 collections / 13081ms
+[ 121s] probeA=363,532,956 (+3,141,660/s) probeC=134,810,062 (+1,224,713/s) link=41,268 (+381/s) decoys=68,383,893 | gc=574 collections / 13676ms
+[ 126s] probeA=378,994,330 (+3,050,521/s) probeC=141,188,036 (+1,258,371/s) link=43,018 (+345/s) decoys=71,582,347 | gc=597 collections / 14222ms
+[ 131s] probeA=392,454,742 (+2,684,134/s) probeC=146,703,109 (+1,099,758/s) link=44,117 (+219/s) decoys=73,959,038 | gc=620 collections / 14733ms
+[ 136s] probeA=407,642,811 (+3,019,809/s) probeC=152,627,410 (+1,177,915/s) link=45,962 (+367/s) decoys=76,843,316 | gc=644 collections / 15328ms
+[ 141s] probeA=423,491,361 (+3,167,500/s) probeC=159,050,345 (+1,283,691/s) link=47,988 (+405/s) decoys=79,476,972 | gc=666 collections / 15831ms
+[ 146s] probeA=439,973,504 (+3,246,186/s) probeC=165,103,346 (+1,192,149/s) link=49,743 (+346/s) decoys=82,195,391 | gc=691 collections / 16424ms
+[ 151s] probeA=455,974,056 (+3,189,378/s) probeC=171,363,310 (+1,247,794/s) link=51,960 (+442/s) decoys=84,876,297 | gc=715 collections / 16941ms
+[ 156s] probeA=471,191,596 (+3,039,278/s) probeC=177,111,221 (+1,147,984/s) link=54,010 (+409/s) decoys=87,417,593 | gc=740 collections / 17542ms
+[ 161s] probeA=487,855,821 (+3,329,084/s) probeC=182,773,747 (+1,131,227/s) link=55,815 (+361/s) decoys=89,879,326 | gc=763 collections / 18104ms
+[ 166s] probeA=503,556,264 (+3,132,915/s) probeC=189,414,439 (+1,325,104/s) link=58,128 (+462/s) decoys=93,021,871 | gc=788 collections / 18640ms
+[ 171s] probeA=518,518,011 (+2,981,015/s) probeC=195,447,774 (+1,202,096/s) link=60,229 (+419/s) decoys=96,209,782 | gc=811 collections / 19236ms
+[ 176s] probeA=534,873,535 (+3,269,285/s) probeC=202,102,170 (+1,330,139/s) link=62,531 (+460/s) decoys=99,471,610 | gc=834 collections / 19730ms
+[ 181s] probeA=551,259,976 (+3,273,953/s) probeC=207,575,251 (+1,093,502/s) link=64,261 (+346/s) decoys=102,323,910 | gc=857 collections / 20289ms
+[ 186s] probeA=568,393,472 (+3,421,715/s) probeC=214,013,158 (+1,285,709/s) link=66,283 (+404/s) decoys=105,157,874 | gc=883 collections / 20826ms
+[ 191s] probeA=582,608,153 (+2,839,112/s) probeC=219,521,861 (+1,100,259/s) link=67,868 (+317/s) decoys=107,907,021 | gc=908 collections / 21393ms
+[ 196s] probeA=597,557,640 (+2,985,694/s) probeC=224,806,996 (+1,055,541/s) link=69,792 (+384/s) decoys=110,906,001 | gc=933 collections / 22035ms
+[ 201s] probeA=613,810,425 (+3,245,371/s) probeC=230,863,525 (+1,209,373/s) link=71,477 (+336/s) decoys=113,587,587 | gc=956 collections / 22553ms
+[ 206s] probeA=629,310,891 (+3,097,245/s) probeC=236,856,880 (+1,197,570/s) link=73,140 (+332/s) decoys=116,503,792 | gc=983 collections / 23188ms
+[ 211s] probeA=644,850,850 (+3,101,939/s) probeC=242,556,664 (+1,137,737/s) link=75,004 (+372/s) decoys=119,447,358 | gc=1007 collections / 23752ms
+[ 216s] probeA=661,185,252 (+3,261,234/s) probeC=248,674,550 (+1,221,462/s) link=76,862 (+371/s) decoys=122,087,496 | gc=1033 collections / 24365ms
+[ 221s] probeA=676,502,722 (+3,054,968/s) probeC=253,331,725 (+928,843/s) link=78,330 (+293/s) decoys=124,830,221 | gc=1057 collections / 25022ms
+[ 226s] probeA=691,269,105 (+2,952,511/s) probeC=258,641,109 (+1,061,601/s) link=80,077 (+349/s) decoys=127,547,847 | gc=1084 collections / 25667ms
+[ 231s] probeA=706,366,987 (+3,008,917/s) probeC=264,133,481 (+1,094,597/s) link=81,829 (+349/s) decoys=129,832,481 | gc=1104 collections / 26173ms
+[ 236s] probeA=722,317,247 (+3,189,295/s) probeC=270,117,198 (+1,196,459/s) link=83,491 (+332/s) decoys=132,548,033 | gc=1129 collections / 26756ms
+
+No violation after 240.0s (probeA=736,988,937 probeB=92,123,621 probeC=275,015,058 link=85,015 decoys=135,215,271). Invariant held.
+---- g1/probeC/space16k done (rc=0) ----
+######## g1/probeC/youngsmall : -Xmx1g -Xms1g -XX:CompressedClassSpaceSize=512m -XX:MaxMetaspaceSize=1g -XX:+UseG1GC -XX:G1NewSizePercent=5 -XX:G1MaxNewSizePercent=10 -XX:+ClassUnloadingWithConcurrentMark -XX:+ExplicitGCInvokesConcurrent -Dmt.durationSec=240 -Dmt.threads=10 -Dmt.probeCThreads=10 -Dmt.probeCSpace=65536 -Dmt.sysgcMs=2 ########
+Error: VM option 'G1NewSizePercent' is experimental and must be enabled via -XX:+UnlockExperimentalVMOptions.
+Error: The unlock option must precede 'G1NewSizePercent'.
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.
+---- g1/probeC/youngsmall done (rc=1) ----
+######## zgc-gen/probeC/space16k : -Xmx1g -Xms1g -XX:CompressedClassSpaceSize=512m -XX:MaxMetaspaceSize=1g -XX:+UseZGC -XX:+ZGenerational -Dmt.durationSec=180 -Dmt.threads=10 -Dmt.probeCThreads=10 -Dmt.probeCSpace=16384 ########
+MethodType intern stress: ZGC Minor Cycles+ZGC Minor Pauses+ZGC Major Cycles+ZGC Major Pauses | 21.0.11+10-LTS
+threads=10 decoy=5 pinned=1024 duration=180s probeB=true gcThread=true sysgcMs=0
+[   5s] probeA=4,365,141 (+872,740/s) probeC=1,835,796 (+367,038/s) link=1,182 (+236/s) decoys=1,347,380 | gc=22 collections / 5912ms
+[  10s] probeA=20,455,521 (+3,170,137/s) probeC=8,851,674 (+1,382,273/s) link=2,707 (+300/s) decoys=5,550,595 | gc=72 collections / 14015ms
+[  15s] probeA=40,433,542 (+3,956,828/s) probeC=18,462,009 (+1,903,414/s) link=4,739 (+402/s) decoys=11,080,331 | gc=138 collections / 19121ms
+[  20s] probeA=54,590,131 (+2,797,931/s) probeC=25,294,602 (+1,350,405/s) link=6,552 (+358/s) decoys=15,634,311 | gc=197 collections / 26636ms
+[  25s] probeA=78,334,336 (+4,712,361/s) probeC=36,223,649 (+2,169,018/s) link=8,817 (+450/s) decoys=22,187,036 | gc=271 collections / 31247ms
+[  30s] probeA=101,334,187 (+4,593,495/s) probeC=45,455,626 (+1,843,796/s) link=10,818 (+400/s) decoys=27,572,854 | gc=341 collections / 39617ms
+[  35s] probeA=124,857,592 (+4,682,675/s) probeC=55,996,232 (+2,098,261/s) link=13,507 (+535/s) decoys=33,478,629 | gc=413 collections / 44342ms
+[  40s] probeA=146,933,975 (+4,410,866/s) probeC=66,356,046 (+2,069,893/s) link=15,477 (+394/s) decoys=39,408,007 | gc=479 collections / 49004ms
+[  45s] probeA=170,927,897 (+4,782,546/s) probeC=77,507,477 (+2,222,739/s) link=17,648 (+433/s) decoys=45,780,959 | gc=554 collections / 57502ms
+[  50s] probeA=194,305,021 (+4,671,674/s) probeC=88,685,337 (+2,233,779/s) link=19,775 (+425/s) decoys=52,129,621 | gc=631 collections / 62374ms
+[  55s] probeA=215,505,465 (+4,227,185/s) probeC=99,307,683 (+2,118,004/s) link=22,147 (+473/s) decoys=58,556,248 | gc=704 collections / 69694ms
+[  60s] probeA=238,149,381 (+4,525,361/s) probeC=110,413,434 (+2,219,472/s) link=24,506 (+471/s) decoys=64,726,454 | gc=776 collections / 74590ms
+[  65s] probeA=261,595,362 (+4,671,439/s) probeC=120,814,246 (+2,072,285/s) link=26,302 (+358/s) decoys=70,870,466 | gc=852 collections / 79326ms
+[  70s] probeA=284,335,015 (+4,532,544/s) probeC=131,558,243 (+2,141,530/s) link=28,346 (+407/s) decoys=77,046,578 | gc=926 collections / 88445ms
+[  75s] probeA=301,334,001 (+3,385,493/s) probeC=139,014,560 (+1,484,989/s) link=29,751 (+280/s) decoys=81,222,007 | gc=979 collections / 93122ms
+[  80s] probeA=323,477,259 (+4,423,481/s) probeC=149,228,123 (+2,040,327/s) link=31,675 (+384/s) decoys=86,930,183 | gc=1045 collections / 101884ms
+[  85s] probeA=345,245,907 (+4,337,915/s) probeC=159,839,712 (+2,114,609/s) link=33,546 (+373/s) decoys=93,388,063 | gc=1116 collections / 106953ms
+[  91s] probeA=364,856,581 (+3,897,359/s) probeC=169,155,254 (+1,851,339/s) link=35,317 (+352/s) decoys=98,312,015 | gc=1178 collections / 114464ms
+[  96s] probeA=385,605,416 (+4,142,485/s) probeC=178,953,123 (+1,956,135/s) link=37,724 (+481/s) decoys=104,282,647 | gc=1240 collections / 119187ms
+[ 101s] probeA=405,696,666 (+3,993,796/s) probeC=187,995,146 (+1,797,399/s) link=39,472 (+347/s) decoys=109,819,490 | gc=1304 collections / 123895ms
+[ 106s] probeA=425,986,195 (+4,028,838/s) probeC=197,439,814 (+1,875,402/s) link=41,655 (+433/s) decoys=115,618,847 | gc=1367 collections / 132553ms
+[ 111s] probeA=447,291,042 (+4,255,419/s) probeC=207,501,454 (+2,009,707/s) link=43,657 (+400/s) decoys=120,991,719 | gc=1437 collections / 137530ms
+[ 116s] probeA=468,864,204 (+4,303,659/s) probeC=217,998,051 (+2,093,980/s) link=46,090 (+485/s) decoys=127,567,832 | gc=1507 collections / 145862ms
+[ 121s] probeA=490,898,190 (+4,400,152/s) probeC=228,013,658 (+2,000,101/s) link=48,143 (+410/s) decoys=133,563,619 | gc=1575 collections / 150748ms
+[ 126s] probeA=511,708,463 (+4,152,327/s) probeC=237,623,536 (+1,917,484/s) link=50,310 (+432/s) decoys=138,908,124 | gc=1637 collections / 155353ms
+[ 131s] probeA=532,380,479 (+4,128,587/s) probeC=247,876,715 (+2,047,751/s) link=52,348 (+407/s) decoys=144,385,236 | gc=1706 collections / 163904ms
+[ 136s] probeA=550,273,413 (+3,542,639/s) probeC=256,293,730 (+1,666,493/s) link=54,100 (+347/s) decoys=149,374,800 | gc=1765 collections / 168775ms
+[ 141s] probeA=572,442,198 (+4,397,493/s) probeC=266,502,701 (+2,025,094/s) link=56,184 (+413/s) decoys=154,854,264 | gc=1832 collections / 173464ms
+[ 146s] probeA=593,961,502 (+4,285,040/s) probeC=276,827,099 (+2,055,850/s) link=58,709 (+503/s) decoys=160,544,829 | gc=1900 collections / 181821ms
+[ 151s] probeA=616,238,416 (+4,450,451/s) probeC=286,805,941 (+1,993,559/s) link=60,967 (+451/s) decoys=167,143,738 | gc=1975 collections / 186525ms
+[ 156s] probeA=637,584,126 (+4,244,078/s) probeC=297,482,067 (+2,122,690/s) link=63,191 (+442/s) decoys=173,240,675 | gc=2045 collections / 195245ms
+[ 161s] probeA=659,487,116 (+4,377,624/s) probeC=307,479,458 (+1,998,121/s) link=65,347 (+431/s) decoys=178,956,602 | gc=2113 collections / 200176ms
+[ 166s] probeA=678,964,127 (+3,884,318/s) probeC=316,690,157 (+1,836,898/s) link=66,875 (+305/s) decoys=183,940,025 | gc=2181 collections / 204724ms
+[ 171s] probeA=701,122,888 (+4,404,125/s) probeC=327,022,910 (+2,053,668/s) link=69,371 (+496/s) decoys=190,330,729 | gc=2246 collections / 212594ms
+[ 176s] probeA=722,865,975 (+4,338,175/s) probeC=337,558,111 (+2,101,980/s) link=72,143 (+553/s) decoys=196,329,866 | gc=2324 collections / 220423ms
+
+No violation after 180.0s (probeA=741,018,071 probeB=92,627,265 probeC=345,617,348 link=73,775 decoys=201,703,337). Invariant held.
+---- zgc-gen/probeC/space16k done (rc=0) ----
+######## shenandoah/probeC/space16k : -Xmx1g -Xms1g -XX:CompressedClassSpaceSize=512m -XX:MaxMetaspaceSize=1g -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -Dmt.durationSec=180 -Dmt.threads=10 -Dmt.probeCThreads=10 -Dmt.probeCSpace=16384 ########
+MethodType intern stress: Shenandoah Pauses+Shenandoah Cycles | 21.0.11+10-LTS
+threads=10 decoy=5 pinned=1024 duration=180s probeB=true gcThread=true sysgcMs=0
+[   5s] probeA=2,427,222 (+484,862/s) probeC=1,246,175 (+248,936/s) link=1,001 (+200/s) decoys=1,092,428 | gc=16 collections / 3820ms
+[  10s] probeA=8,283,186 (+1,147,091/s) probeC=3,518,259 (+445,065/s) link=3,034 (+398/s) decoys=2,643,332 | gc=41 collections / 8899ms
+[  15s] probeA=20,169,305 (+2,371,881/s) probeC=10,008,588 (+1,295,148/s) link=6,580 (+708/s) decoys=6,265,500 | gc=78 collections / 14524ms
+[  20s] probeA=32,664,362 (+2,484,214/s) probeC=16,524,871 (+1,295,540/s) link=10,465 (+772/s) decoys=10,157,211 | gc=119 collections / 19607ms
+[  25s] probeA=44,742,869 (+2,387,098/s) probeC=23,500,778 (+1,378,661/s) link=14,342 (+766/s) decoys=13,921,523 | gc=160 collections / 25075ms
+[  30s] probeA=58,095,140 (+2,666,740/s) probeC=30,767,918 (+1,451,406/s) link=18,361 (+803/s) decoys=17,928,116 | gc=205 collections / 29923ms
+[  35s] probeA=71,039,575 (+2,585,181/s) probeC=38,523,179 (+1,548,832/s) link=22,771 (+881/s) decoys=22,199,466 | gc=251 collections / 35243ms
+[  40s] probeA=84,391,532 (+2,658,784/s) probeC=45,928,930 (+1,474,712/s) link=27,698 (+981/s) decoys=26,165,831 | gc=292 collections / 40782ms
+[  45s] probeA=97,264,288 (+2,556,998/s) probeC=53,106,206 (+1,425,668/s) link=31,993 (+853/s) decoys=30,437,335 | gc=340 collections / 46296ms
+[  50s] probeA=111,445,270 (+2,829,581/s) probeC=60,697,364 (+1,514,690/s) link=36,387 (+877/s) decoys=34,771,804 | gc=383 collections / 50892ms
+[  55s] probeA=125,179,807 (+2,738,463/s) probeC=67,372,335 (+1,330,890/s) link=40,147 (+750/s) decoys=38,598,042 | gc=425 collections / 56997ms
+[  60s] probeA=137,876,995 (+2,532,429/s) probeC=75,129,996 (+1,547,250/s) link=44,296 (+828/s) decoys=43,051,542 | gc=468 collections / 62141ms
+[  65s] probeA=151,238,225 (+2,659,933/s) probeC=83,006,734 (+1,568,089/s) link=48,775 (+892/s) decoys=47,308,896 | gc=518 collections / 67205ms
+[  70s] probeA=163,831,704 (+2,510,371/s) probeC=90,504,352 (+1,494,568/s) link=53,108 (+864/s) decoys=51,457,893 | gc=562 collections / 72884ms
+[  75s] probeA=174,359,006 (+2,103,148/s) probeC=96,680,212 (+1,233,815/s) link=55,606 (+499/s) decoys=54,938,202 | gc=593 collections / 77920ms
+[  81s] probeA=186,949,025 (+2,457,783/s) probeC=104,064,035 (+1,441,446/s) link=59,672 (+794/s) decoys=59,201,048 | gc=637 collections / 82948ms
+[  86s] probeA=200,022,947 (+2,574,109/s) probeC=110,360,694 (+1,239,742/s) link=63,593 (+772/s) decoys=62,955,551 | gc=686 collections / 88545ms
+[  91s] probeA=212,065,670 (+2,389,432/s) probeC=117,240,630 (+1,365,068/s) link=67,601 (+795/s) decoys=66,487,185 | gc=732 collections / 94568ms
+[  96s] probeA=224,799,636 (+2,518,843/s) probeC=123,946,252 (+1,326,406/s) link=71,403 (+752/s) decoys=70,287,596 | gc=776 collections / 100282ms
+[ 101s] probeA=237,575,604 (+2,501,646/s) probeC=131,063,643 (+1,393,647/s) link=75,273 (+758/s) decoys=74,172,426 | gc=816 collections / 105634ms
+[ 106s] probeA=250,418,202 (+2,509,304/s) probeC=138,479,639 (+1,449,005/s) link=78,985 (+725/s) decoys=78,153,528 | gc=858 collections / 111467ms
+[ 111s] probeA=263,822,042 (+2,674,316/s) probeC=145,821,433 (+1,464,825/s) link=82,987 (+798/s) decoys=82,398,647 | gc=899 collections / 115839ms
+[ 116s] probeA=275,519,081 (+2,292,498/s) probeC=152,592,349 (+1,327,029/s) link=85,917 (+574/s) decoys=86,114,395 | gc=939 collections / 121162ms
+[ 121s] probeA=287,687,269 (+2,386,322/s) probeC=159,346,064 (+1,324,482/s) link=89,518 (+706/s) decoys=89,936,520 | gc=981 collections / 127205ms
+[ 126s] probeA=298,408,797 (+2,110,481/s) probeC=165,119,043 (+1,136,383/s) link=92,112 (+511/s) decoys=93,625,445 | gc=1018 collections / 132959ms
+[ 131s] probeA=309,723,227 (+2,257,972/s) probeC=171,928,244 (+1,358,883/s) link=95,092 (+595/s) decoys=97,267,389 | gc=1060 collections / 137391ms
+[ 136s] probeA=320,573,051 (+2,127,668/s) probeC=177,826,689 (+1,156,695/s) link=97,771 (+525/s) decoys=100,415,520 | gc=1103 collections / 143882ms
+[ 141s] probeA=331,524,909 (+2,156,912/s) probeC=184,454,537 (+1,305,321/s) link=100,285 (+495/s) decoys=103,887,942 | gc=1139 collections / 148904ms
+[ 146s] probeA=342,958,079 (+2,282,015/s) probeC=191,148,280 (+1,336,044/s) link=102,605 (+463/s) decoys=107,191,471 | gc=1177 collections / 154268ms
+[ 152s] probeA=354,302,526 (+2,259,392/s) probeC=197,889,339 (+1,342,568/s) link=105,096 (+496/s) decoys=110,374,987 | gc=1224 collections / 159758ms
+[ 157s] probeA=366,301,027 (+2,342,584/s) probeC=204,514,551 (+1,293,505/s) link=107,396 (+449/s) decoys=113,831,135 | gc=1266 collections / 164630ms
+[ 162s] probeA=378,435,193 (+2,422,341/s) probeC=211,738,453 (+1,442,106/s) link=111,637 (+847/s) decoys=117,751,952 | gc=1311 collections / 170709ms
+[ 167s] probeA=391,186,374 (+2,490,271/s) probeC=218,465,058 (+1,313,688/s) link=115,343 (+724/s) decoys=122,084,734 | gc=1361 collections / 175997ms
+[ 172s] probeA=403,675,219 (+2,466,498/s) probeC=225,332,711 (+1,356,335/s) link=118,317 (+587/s) decoys=125,802,359 | gc=1409 collections / 180976ms
+[ 177s] probeA=417,004,592 (+2,628,231/s) probeC=232,325,093 (+1,378,729/s) link=122,427 (+810/s) decoys=130,123,313 | gc=1452 collections / 186045ms
+
+No violation after 180.0s (probeA=425,061,634 probeB=53,132,709 probeC=236,906,053 link=125,060 decoys=132,600,795). Invariant held.
+---- shenandoah/probeC/space16k done (rc=0) ----
+######## launch storm: G1, 120 short JVMs (first-time linkage at warmup) ########
+  launch storm: 20/120
+  launch storm: 40/120
+  launch storm: 60/120
+  launch storm: 80/120
+  launch storm: 100/120
+  launch storm: 120/120
+######## HUNT COMPLETE: no violation reproduced ########
+JDK21_HUNT_EXIT=0

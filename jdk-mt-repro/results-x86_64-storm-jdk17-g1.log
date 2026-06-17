@@ -1,0 +1,4 @@
+launch storm: N=2000 secs=3 parallelism=6 gc=-XX:+UseG1GC
+java: /tmp/jdk17/bin/java
+RESULT: 2000 launches completed, no violation.
+STORM17_EXIT=0
