@@ -1,12 +1,19 @@
 # Handoff: `MethodType` interning / `invokeExact` `WrongMethodTypeException`
 
-**Status:** not reproduced on this machine (aarch64). All harnesses are built, validated,
-and exhausted here. The leading remaining hypothesis is that the bug is **x86_64-specific**
-(a HotSpot GC/JIT phenomenon), so the next step is to run the *same artifacts* on an
-**x86_64** host. This document is the orientation for that successor agent and the basis
-for an eventual OpenJDK report.
+**Status:** NOT reproduced anywhere we have tried. Synthetic stress (intern-invariant + C2
+`invokeExact`) and the **real libraries on the exact reported build** (Corretto 17.0.8.7.1)
+both held, on **both aarch64 and x86_64**, across all four collectors, product + fastdebug
+(aarch64) with GC verification, and ~22 billion combined checks/builds. The "x86_64-specific"
+hypothesis was **refuted** (§5a). Source analysis proves the Java intern logic is race-free
+on both JDK 17 and 21 (§2), so the field failures are a VM-level (GC ref-processing or C2)
+event that black-box stress from outside the VM does not force.
 
-Everything referenced lives in this directory (`jdk-mt-repro/`).
+**Recommendation:** stop black-box hunting; engage upstream (§8). Remaining untried levers
+are a **fastdebug x86_64** run and JDK 16 (the #142 build). Reading order: §1 (bug) → §2
+(why it's VM-level) → §5/§5a/§5b (what was tried) → §8 (upstream report).
+
+Everything referenced lives in this directory (`jdk-mt-repro/`); real-library artifacts are
+in `real-libs/`.
 
 ---
 
@@ -206,6 +213,54 @@ on a build that has it, and the real Caffeine/Blackbird workloads under load (§
 
 ---
 
+## 5b. Real-library attempt on the EXACT reported build (2026-06-18) — also HELD
+
+The most faithful attempt: drive the **real libraries' actual code paths** on **Amazon
+Corretto 17.0.8.7.1** — the precise JDK build named in caffeine#1111 — instead of a
+synthetic model. Artifacts live in `real-libs/` (sources + `real-hunt.sh` + README +
+result log; jars/JDK are fetched, not committed).
+
+- **Caffeine 3.1.7** `Caffeine.build()` across many policy combinations. Confirmed in the
+  3.1.7 bytecode that `NodeFactory.newFactory` is exactly
+  `findConstructor → type() → changeReturnType → asType → invokeExact()` — a fresh
+  `MethodType` per build, checked by identity against the pinned `expected`. This is the
+  #1111 path verbatim, sustainable at ~12M builds/s (factory classes bounded by ~policy
+  combos, no metaspace growth).
+- **Blackbird/Jackson 2.12.7** serializing varied bean types (covers every
+  `BBSerializerModifier` accessor branch: int/long/boolean/String/Object) — the #142 path.
+
+| JDK / GC | config | metric | result |
+|---|---|---|---|
+| Corretto 17.0.8.7.1, G1 | Caffeine, 16 threads, 300s | 4.14 B builds | held |
+| Corretto 17.0.8.7.1, G1 youngsmall | Caffeine, 14 threads, 240s | 2.70 B builds | held |
+| Corretto 17.0.8.7.1, ZGC | Caffeine, 14 threads, 180s | 2.05 B builds | held |
+| Corretto 17.0.8.7.1, Shenandoah | Caffeine, 14 threads, 180s | 1.93 B builds | held |
+| Corretto 17.0.8.7.1, G1 | launch storm A (both libs, 500 short JVMs) | — | held |
+| Corretto 17.0.8.7.1, G1 | launch storm B (Blackbird fresh-mapper, 500 short JVMs) | — | held |
+
+Aggregate: **~10.8 billion real `Caffeine.build()` calls** through the verbatim #1111
+`invokeExact` path, plus ~1000 short-JVM warmup launches covering Blackbird first-use —
+**zero reproductions**.
+
+Design/fidelity notes for the next agent:
+- The Caffeine path is the sustainable, high-rate, best-documented repro; long phases use it.
+- Blackbird `fresh-mapper-per-op` spins a hidden lambda class per accessor and exhausts
+  metaspace in a long run (caught correctly as exit 3, *not* a violation). It is therefore
+  exercised only in the **launch storms** (short JVMs that exit before classes accumulate) —
+  which is also *more faithful*, since #142 was concurrent startup first-use, not steady state.
+- `real.freshMapper`/`real.mapperRefresh` control mapper churn; `real.caffeineThreads` /
+  `real.blackbirdThreads` size each side (set blackbird=0 for a pure, indefinitely-sustainable
+  Caffeine run).
+
+**Conclusion after both synthetic and real attempts, on two arches:** the bug is a genuine
+rare VM-level event (GC reference processing or C2) that needs either the original
+production workload/timing or VM-internal tooling. Black-box stress from outside the VM —
+synthetic or real-library — does not force it. The recommendation has shifted from "keep
+hunting" to "engage upstream" (§8); a fastdebug **x86_64** run and the exact older builds
+(Corretto 17.0.8 ✓ done, JDK 16 from #142 — not yet) remain the only untried black-box levers.
+
+---
+
 ## 6. What the x86_64 successor should do (in order)
 
 0. `git checkout` this branch; `cd jdk-mt-repro`; confirm `uname -m` = `x86_64`.
@@ -240,7 +295,15 @@ production rate is ~1 in hundreds-to-thousands of launches.
 
 ---
 
-## 8. Draft OpenJDK report (fill in once x86_64 is tried)
+## 8. Upstream report
+
+A complete, self-contained draft for core-libs-dev / hotspot-dev (and for cross-linking to
+the Caffeine/Jackson maintainers and to uschindler/ben-manes, who already suspected a JDK
+threading bug) is in **`UPSTREAM-REPORT.md`**. It folds in the decoded symptom, the
+race-free proof for both intern implementations, the full negative-results table across both
+architectures, the JBS "is this known?" search, and four specific questions for OpenJDK.
+
+The terse skeleton below is kept for reference; `UPSTREAM-REPORT.md` supersedes it.
 
 > **Component:** hotspot/gc or core-libs/java.lang.invoke (TBD by where it reproduces)
 > **Synopsis:** Rare `WrongMethodTypeException` from `MethodHandle.invokeExact` where the
@@ -263,6 +326,9 @@ production rate is ~1 in hundreds-to-thousands of launches.
 > **Questions for OpenJDK:** is this a known/fixed issue (search MethodType intern / weak
 > ref processing / invokeExact); is it x86_64-specific; which builds are affected.
 
-Do **not** file until there is either an x86_64 reproduction or, at minimum, a documented
-x86_64 attempt — OpenJDK will close an unreproducible report, as the Jackson team's own
-issue was closed.
+The x86_64 attempt is now documented (§5a) and the real-library attempt on the exact #1111
+build (§5b) is done, so the report can be filed as a "here is the analysis + a faithful
+harness + exhaustive negative results, please advise" issue. It is framed as a question
+(is this known/fixed/arch-specific?) precisely because we cannot hand OpenJDK a one-command
+reproduction — be explicit about that so it is not closed as not-reproducible the way the
+Jackson issue was.

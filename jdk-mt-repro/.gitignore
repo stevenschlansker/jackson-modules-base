@@ -5,3 +5,7 @@ violation-*.log
 # extracted JDK sources / JVMs, if any get unpacked here during investigation
 java.*/
 jdk.*/
+# real-libs: fetched at runtime, not committed
+real-libs/lib/
+real-libs/out/
+real-libs/target/
