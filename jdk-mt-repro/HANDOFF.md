@@ -8,9 +8,15 @@ hypothesis was **refuted** (§5a). Source analysis proves the Java intern logic 
 on both JDK 17 and 21 (§2), so the field failures are a VM-level (GC ref-processing or C2)
 event that black-box stress from outside the VM does not force.
 
-**Recommendation:** stop black-box hunting; engage upstream (§8). Remaining untried levers
-are a **fastdebug x86_64** run and JDK 16 (the #142 build). Reading order: §1 (bug) → §2
-(why it's VM-level) → §5/§5a/§5b (what was tried) → §8 (upstream report).
+**Next push:** because we ran the EXACT #1111 build (Corretto 17.0.8.7.1) and it held, this
+is a *conditions* problem, not a version problem — so there is more to try before going
+upstream. See **`HANDOFF-FASTDEBUG-X86.md`** for the focused x86_64 fastdebug plan: a new
+realistic-warmup-diversity harness (`WarmupChurn.java` / `warmup-storm.sh`), a CDS/AOT
+discriminator axis, fastdebug GC verification + develop-only C2 stress, and a real-app
+launch loop. `UPSTREAM-REPORT.md` is the analysis-only package if those also come up empty.
+
+**Reading order:** §1 (bug) → §2 (why it's VM-level) → §5/§5a/§5b (what was tried) →
+`HANDOFF-FASTDEBUG-X86.md` (next push) → §8 / `UPSTREAM-REPORT.md`.
 
 Everything referenced lives in this directory (`jdk-mt-repro/`); real-library artifacts are
 in `real-libs/`.
