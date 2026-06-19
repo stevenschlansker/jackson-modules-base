@@ -15,6 +15,9 @@ SECS="${2:-4}"
 PAR="${3:-$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)}"
 GC="${GC:--XX:+UseG1GC}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+OUT="${OUT:-$HERE/out}"
+# Heap sizing; default matches the field report (tiny initial, large max).
+HEAP="${HEAP:--Xms32m -Xmx6g}"
 
 OPENS="--add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/jdk.internal.util=ALL-UNNAMED"
 # Bias each short JVM toward warmup-time linkage churn under GC pressure.
@@ -25,7 +28,7 @@ echo "java: $JAVA"
 hits=0
 run_one() {
   # shellcheck disable=SC2086
-  out="$("$JAVA" $OPENS -Xmx384m -Xms384m $GC $PROPS -cp "$HERE" MethodTypeInternStress 2>&1)"
+  out="$("$JAVA" $OPENS $HEAP $GC $PROPS -cp "$OUT" MethodTypeInternStress 2>&1)"
   rc=$?
   if [ "$rc" = "42" ]; then
     echo "=========== VIOLATION (launch $1) ==========="
@@ -36,7 +39,7 @@ run_one() {
   return 0
 }
 export -f run_one
-export JAVA OPENS PROPS GC HERE
+export JAVA OPENS PROPS GC HEAP OUT HERE
 
 # Run with bounded parallelism; abort the whole storm on first violation.
 seq 1 "$N" | xargs -P "$PAR" -I{} bash -c 'run_one {} || exit 255' 2>/dev/null

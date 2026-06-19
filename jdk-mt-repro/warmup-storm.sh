@@ -5,12 +5,15 @@
 # MethodHandle lookups concurrently, with an invokeExact identity check at each lambda site.
 # Short lifetime avoids the metaspace exhaustion a long single run hits.
 #
-# Usage: [JAVA=...] [N=2000] [SECS=4] [PAR=4] [GC=-XX:+UseG1GC] ./warmup-storm.sh
+# Usage: [JAVA=...] [N=2000] [SECS=4] [PAR=4] [GC=-XX:+UseG1GC] [HEAP="-Xms32m -Xmx6g"] ./warmup-storm.sh
 # Exit 42 = reproduced; >=128 = VM assert (fastdebug); 0 = all launches held.
 set -u
 JAVA="${JAVA:-$(command -v java)}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 N="${N:-2000}"; SECS="${SECS:-4}"; PAR="${PAR:-4}"; GC="${GC:--XX:+UseG1GC}"
+# Heap sizing. Default matches the field report (jackson-modules-base#142, Noitcereon):
+# tiny initial heap, large max -> aggressive warmup-time GC + heap resizing.
+HEAP="${HEAP:--Xms32m -Xmx6g}"
 OPENS="--add-opens java.base/java.lang.invoke=ALL-UNNAMED --add-opens java.base/jdk.internal.util=ALL-UNNAMED"
 META="-XX:CompressedClassSpaceSize=1g -XX:MaxMetaspaceSize=2g -XX:+ClassUnloadingWithConcurrentMark"
 
@@ -27,7 +30,7 @@ echo "warmup-storm: N=$N secs=$SECS par=$PAR gc=$GC java=$JAVA"
 
 one() {
   # shellcheck disable=SC2086
-  out="$("$JAVA" $OPENS $META $GC -Xmx512m -Xms512m -cp "$OUT" \
+  out="$("$JAVA" $OPENS $META $GC $HEAP -cp "$OUT" \
         -Dwarm.durationSec=$SECS -Dwarm.threads=6 WarmupChurn 2>&1)"
   rc=$?
   if [ "$rc" = "42" ] || [ "$rc" -ge 128 ] 2>/dev/null; then
@@ -38,7 +41,7 @@ one() {
   fi
   return 0
 }
-export -f one; export JAVA OPENS META GC OUT SECS HERE
+export -f one; export JAVA OPENS META GC HEAP OUT SECS HERE
 
 seq 1 "$N" | xargs -P "$PAR" -I{} bash -c 'one {} || exit 255' 2>/dev/null
 if [ "$?" != "0" ]; then echo "RESULT: reproduced — see warmup-hit-*.log in $HERE"; exit 42; fi

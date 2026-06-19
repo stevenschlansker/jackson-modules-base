@@ -34,6 +34,16 @@ public final class WarmupChurn {
 
     static final MethodHandles.Lookup L = MethodHandles.lookup();
 
+    /**
+     * Custom single-abstract-method interface returning a primitive {@code boolean}.
+     * Mirrors Blackbird's own {@code ToBooleanFunction}: the second field report
+     * (Noitcereon, jackson-modules-base#142) failed on a bean field of primitive type
+     * {@code boolean}, whose accessor Blackbird adapts to a {@code ()ToBooleanFunction}
+     * factory site — a SAM that is NOT a {@code java.base} type, unlike ToIntFunction.
+     * Using a non-java.base SAM here keeps the intern population faithful to the report.
+     */
+    @FunctionalInterface interface ToBooleanFn { boolean applyAsBoolean(Object o); }
+
     // Pinned call-site 'expected' types for the invokeExact sites (== the casts below).
     static final MethodType T_RUN  = MethodType.methodType(Runnable.class);
     static final MethodType T_SUP  = MethodType.methodType(Supplier.class);
@@ -43,6 +53,12 @@ public final class WarmupChurn {
     static final MethodType T_CONS = MethodType.methodType(Consumer.class);
     static final MethodType T_TOINT= MethodType.methodType(ToIntFunction.class);
     static final MethodType T_TOLNG= MethodType.methodType(ToLongFunction.class);
+    // The two shapes from the second field report (jackson-modules-base#142, Noitcereon):
+    //  - ()ToBooleanFn : primitive-boolean accessor -> custom non-java.base SAM (serializer path).
+    //  - (MethodHandle)Function : the CreatorOptimizer deser site, where the factory handle
+    //    takes a MethodHandle argument (a non-nullary 'expected' type) and is invokeExact'd.
+    static final MethodType T_TOBOOL = MethodType.methodType(ToBooleanFn.class);
+    static final MethodType T_FN_MH  = MethodType.methodType(Function.class, MethodHandle.class);
 
     static final AtomicLong sites = new AtomicLong();
     static final AtomicLong interns = new AtomicLong();
@@ -136,9 +152,24 @@ public final class WarmupChurn {
                 L.findStatic(WarmupChurn.class, "tiImpl", MethodType.methodType(int.class, Object.class)), MethodType.methodType(int.class, Object.class)).getTarget().invokeExact();
         ToLongFunction<Object> tl = (ToLongFunction<Object>) LambdaMetafactory.metafactory(L, "applyAsLong", T_TOLNG, MethodType.methodType(long.class, Object.class),
                 L.findStatic(WarmupChurn.class, "tlImpl", MethodType.methodType(long.class, Object.class)), MethodType.methodType(long.class, Object.class)).getTarget().invokeExact();
+        // Field site #142a: primitive-boolean accessor -> custom (non-java.base) SAM. Same
+        // LambdaMetafactory + ()ToBooleanFn invokeExact identity check as the others.
+        ToBooleanFn tb = (ToBooleanFn) LambdaMetafactory.metafactory(L, "applyAsBoolean", T_TOBOOL, MethodType.methodType(boolean.class, Object.class),
+                L.findStatic(WarmupChurn.class, "tbImpl", MethodType.methodType(boolean.class, Object.class)), MethodType.methodType(boolean.class, Object.class)).getTarget().invokeExact();
+
+        // Field site #142b: the Blackbird CreatorOptimizer deserialization path. There the
+        // factory handle's type is (MethodHandle)Function — a NON-nullary 'expected' type —
+        // and it is invokeExact'd to bind the captured creator MethodHandle. We reproduce that
+        // exact shape: a handle of type (MethodHandle)Function, identity-checked at invokeExact.
+        // (T_FN_MH is the pinned call-site 'expected'; mhToFn's declared type must equal it.)
+        MethodHandle bound = MH_TO_FN;            // type: (MethodHandle)Function
+        Function<Object,Object> df = (Function<Object,Object>) bound.invokeExact((MethodHandle) MH_IDENTITY);
+
         // use them so nothing folds away
-        r.run(); if (p.test(s.get()) && f.apply(c) != bf.apply(r, ti) && ti.applyAsInt(tl) == Integer.MIN_VALUE) sink = c;
-        sites.addAndGet(8);
+        r.run();
+        if (p.test(s.get()) && f.apply(c) != bf.apply(r, ti) && ti.applyAsInt(tl) == Integer.MIN_VALUE
+                && tb.applyAsBoolean(s) == (df.apply(c) == null)) sink = c;
+        sites.addAndGet(10);
     }
 
     // varied invokedynamic string-concat shapes (different arg counts/types per call site)
@@ -164,6 +195,8 @@ public final class WarmupChurn {
         else if (MethodType.methodType(Function.class) != T_FN)    reportPinned("Function", T_FN);
         else if (MethodType.methodType(Supplier.class) != T_SUP)   reportPinned("Supplier", T_SUP);
         else if (MethodType.methodType(BiFunction.class) != T_BIFN)reportPinned("BiFunction", T_BIFN);
+        else if (MethodType.methodType(ToBooleanFn.class) != T_TOBOOL) reportPinned("ToBooleanFn", T_TOBOOL);
+        else if (MethodType.methodType(Function.class, MethodHandle.class) != T_FN_MH) reportPinned("Function(MethodHandle)", T_FN_MH);
     }
 
     // ---- impl targets for the lambdas ----
@@ -175,6 +208,24 @@ public final class WarmupChurn {
     static void cImpl(Object o) {}
     static int tiImpl(Object o) { return o == null ? 0 : 1; }
     static long tlImpl(Object o) { return 0L; }
+    static boolean tbImpl(Object o) { return o == null; }
+
+    // Deserialization-site (CreatorOptimizer) handles. mhToFn turns a captured MethodHandle
+    // into a Function; its declared type is exactly (MethodHandle)Function, matching the pinned
+    // T_FN_MH call-site 'expected' that the (MethodHandle)Function invokeExact identity-checks.
+    static final MethodHandle MH_TO_FN;
+    static final MethodHandle MH_IDENTITY;
+    static {
+        try {
+            MH_TO_FN = L.findStatic(WarmupChurn.class, "mhToFn", T_FN_MH);
+            MH_IDENTITY = L.findStatic(WarmupChurn.class, "fImpl", MethodType.methodType(Object.class, Object.class));
+        } catch (ReflectiveOperationException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+    static Function<Object,Object> mhToFn(MethodHandle creator) {
+        return o -> { try { return creator.invoke(o); } catch (Throwable t) { throw new RuntimeException(t); } };
+    }
 
     // ---- reporting ----
     static void report(String where, Throwable t) {
@@ -190,7 +241,8 @@ public final class WarmupChurn {
     }
     static void reportPinned(String fi, MethodType pinned) {
         if (!FAILED.compareAndSet(false, true)) return;
-        MethodType fresh = MethodType.methodType(pinnedClass(fi));
+        // Regenerate the same shape from scratch; it must intern back to the pinned instance.
+        MethodType fresh = MethodType.methodType(pinned.returnType(), pinned.parameterArray());
         StringBuilder b = new StringBuilder("=== Pinned-type interning violation: methodType(").append(fi).append(") != pinned ===\n");
         b.append("thread : ").append(Thread.currentThread().getName()).append('\n');
         b.append("pinned : @").append(idh(pinned)).append("  fresh: @").append(idh(fresh))
@@ -198,10 +250,6 @@ public final class WarmupChurn {
         if (internGet != null) try { Object held = internGet.invoke(internTable, pinned);
             b.append("internTable.get(pinned)=@").append(held==null?"null":idh(held)).append(" (==pinned? ").append(held==pinned).append(")\n"); } catch (Throwable ignore) {}
         REPORT.set(b.toString()); running = false;
-    }
-    static Class<?> pinnedClass(String fi) {
-        switch (fi) { case "ToIntFunction": return ToIntFunction.class; case "Function": return Function.class;
-            case "Supplier": return Supplier.class; default: return BiFunction.class; }
     }
 
     static void selfTest() throws Throwable {

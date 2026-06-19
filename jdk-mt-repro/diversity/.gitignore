@@ -1,0 +1,5 @@
+# Compiled output (rebuild by compiling Main.java + GenBeans.java)
+out/
+*.class
+# hit reports captured at runtime
+diversity-hit-*.log

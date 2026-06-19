@@ -1,0 +1,4 @@
+# Maven build output (rebuild with `mvn package`)
+target/
+# storm run output (captured at runtime)
+storm-out/

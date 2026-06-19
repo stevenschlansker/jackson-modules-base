@@ -51,6 +51,14 @@ fi
 if "$JAVA" -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -version >/dev/null 2>&1; then
   run "shenandoah/caffeine" -Xmx1g -Xms1g $META -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC \
       -Dreal.durationSec=180 -Dreal.caffeineThreads=14 -Dreal.blackbirdThreads=0
+
+  # Phase 5: Shenandoah, Blackbird serialize AND deserialize under sustained load. The
+  # prior Shenandoah phase ran Caffeine-only (blackbirdThreads=0), so the real Blackbird
+  # code paths from #142 had never run under Shenandoah. Use the FIELD heap config from the
+  # report (-Xms32m -Xmx6g, a wide young/old span) and oversubscribe all three worker pools
+  # to maximise concurrent first-time accessor/creator linkage during GC.
+  run "shenandoah/blackbird-roundtrip" -Xms32m -Xmx6g $META -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC \
+      -Dreal.durationSec=240 -Dreal.caffeineThreads=12 -Dreal.blackbirdThreads=8 -Dreal.blackbirdDeserThreads=8
 fi
 
 # --- Launch storms: short JVMs, warmup first-use. This is the faithful BLACKBIRD test

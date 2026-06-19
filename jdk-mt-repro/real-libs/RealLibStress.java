@@ -24,25 +24,32 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  *  - Blackbird (FasterXML/jackson-modules-base#142): the WrongMethodTypeException
  *    originated in BBSerializerModifier.createProperty during first serialization of a
- *    bean. We serialize many distinct bean classes from many threads with fresh
- *    ObjectMappers (fresh module + serializer-modifier state) to force repeated
- *    first-time property-accessor linkage.
+ *    bean, and (a second field report) in CreatorOptimizer.createOptimized during first
+ *    *deserialization* of a bean. We serialize many distinct bean classes and, on the
+ *    deser path, readValue many distinct @JsonCreator bean classes from many threads with
+ *    fresh ObjectMappers (fresh module + modifier/optimizer state) to force repeated
+ *    first-time property-accessor and creator linkage.
  *
  * Either library throwing WrongMethodTypeException (directly or wrapped) is the
  * reproduction. Exit 42 = reproduced, 0 = held, 3 = resource exhaustion.
  *
  * Configure with -Dreal.durationSec, -Dreal.caffeineThreads, -Dreal.blackbirdThreads,
- * -Dreal.freshMapper (true: new ObjectMapper per op; the faithful first-link case).
+ * -Dreal.blackbirdDeserThreads, -Dreal.freshMapper (true: new ObjectMapper per op; the
+ * faithful first-link case).
  */
 public final class RealLibStress {
     static final int DURATION_SEC = intProp("real.durationSec", 120);
     static final int CAFFEINE_THREADS = intProp("real.caffeineThreads", Math.max(2, cpus()));
     static final int BLACKBIRD_THREADS = intProp("real.blackbirdThreads", Math.max(2, cpus()));
+    // Deserialization worker threads default to 0 so existing phases are unchanged unless
+    // explicitly requested (this path is new; see blackbirdDeserWorker / #142 deser report).
+    static final int BLACKBIRD_DESER_THREADS = intProp("real.blackbirdDeserThreads", 0);
     static final boolean FRESH_MAPPER = boolProp("real.freshMapper", true);
     static final int MAPPER_REFRESH = intProp("real.mapperRefresh", 64);  // new mapper every N ops when fresh
 
     static final AtomicLong caffeineBuilds = new AtomicLong();
     static final AtomicLong blackbirdSers = new AtomicLong();
+    static final AtomicLong blackbirdDesers = new AtomicLong();
     static final AtomicBoolean FAILED = new AtomicBoolean(false);
     static final AtomicBoolean RESOURCE = new AtomicBoolean(false);
     static final AtomicReference<String> REPORT = new AtomicReference<>();
@@ -54,8 +61,8 @@ public final class RealLibStress {
         System.out.printf("RealLibStress: %s %s | %s%n",
                 System.getProperty("java.vm.name"), System.getProperty("java.vm.version"),
                 System.getProperty("java.vm.vendor"));
-        System.out.printf("caffeine=3.1.7 blackbird/jackson=2.12.7 | caffeineThreads=%d blackbirdThreads=%d freshMapper=%b duration=%ds%n",
-                CAFFEINE_THREADS, BLACKBIRD_THREADS, FRESH_MAPPER, DURATION_SEC);
+        System.out.printf("caffeine=3.1.7 blackbird/jackson=2.12.7 | caffeineThreads=%d blackbirdThreads=%d blackbirdDeserThreads=%d freshMapper=%b duration=%ds%n",
+                CAFFEINE_THREADS, BLACKBIRD_THREADS, BLACKBIRD_DESER_THREADS, FRESH_MAPPER, DURATION_SEC);
 
         // sanity: confirm both paths actually work once before stressing
         warmupSanity();
@@ -69,6 +76,10 @@ public final class RealLibStress {
         for (int i = 0; i < BLACKBIRD_THREADS; i++) {
             final int id = i;
             ts.add(new Thread(() -> blackbirdWorker(id), "blackbird-" + i));
+        }
+        for (int i = 0; i < BLACKBIRD_DESER_THREADS; i++) {
+            final int id = i;
+            ts.add(new Thread(() -> blackbirdDeserWorker(id), "blackbird-deser-" + i));
         }
         Thread mon = new Thread(RealLibStress::monitor, "monitor"); mon.setDaemon(true);
         for (Thread t : ts) t.start();
@@ -91,8 +102,8 @@ public final class RealLibStress {
                     (System.nanoTime() - startNanos) / 1e9);
             System.exit(3);
         }
-        System.out.printf("%nNo reproduction after %ds (caffeineBuilds=%,d blackbirdSers=%,d). Held.%n",
-                DURATION_SEC, caffeineBuilds.get(), blackbirdSers.get());
+        System.out.printf("%nNo reproduction after %ds (caffeineBuilds=%,d blackbirdSers=%,d blackbirdDesers=%,d). Held.%n",
+                DURATION_SEC, caffeineBuilds.get(), blackbirdSers.get(), blackbirdDesers.get());
         System.exit(0);
     }
 
@@ -162,6 +173,34 @@ public final class RealLibStress {
         }
     }
 
+    // ---- Blackbird: deserialize many distinct @JsonCreator bean classes -------
+    // Mirrors blackbirdWorker but drives readValue, which routes through Blackbird's
+    // CreatorOptimizer.createOptimized -> invokeExact (the second #142 field report).
+    // Pre-serialized JSON per type lives in Beans.DESER_JSON (filled in warmupSanity),
+    // so the hot loop only deserializes.
+    static void blackbirdDeserWorker(int id) {
+        try {
+            // Same mapper-refresh churn as the serialize path: forcing fresh mappers keeps
+            // re-linking first-time creators per bean type while bounding live mappers so
+            // the hidden lambda classes can unload and metaspace reaches steady state.
+            ObjectMapper m = newBlackbirdMapper();
+            int k = 0;
+            long ops = 0;
+            while (running && !FAILED.get()) {
+                if (FRESH_MAPPER && (++ops % MAPPER_REFRESH) == 0) m = newBlackbirdMapper();
+                sink = m.readValue(Beans.DESER_JSON[k], Beans.deserType(k));
+                blackbirdDesers.incrementAndGet();
+                if (++k >= Beans.DESER_COUNT) k = 0;
+            }
+        } catch (WrongMethodTypeException w) {
+            report("Blackbird.deserialize", w);
+        } catch (Throwable t) {
+            if (hasCause(t, WrongMethodTypeException.class)) report("Blackbird.deserialize(wrapped)", t);
+            else if (isResource(t)) { RESOURCE.set(true); running = false; }
+            else { unexpected("Blackbird.deserialize", t); }   // diagnostic only, not a reproduction
+        }
+    }
+
     static ObjectMapper newBlackbirdMapper() {
         return new ObjectMapper().registerModule(new BlackbirdModule());
     }
@@ -170,7 +209,13 @@ public final class RealLibStress {
         buildCache(0); buildCache(1); buildCache(17);
         ObjectMapper m = newBlackbirdMapper();
         for (int i = 0; i < Beans.COUNT; i++) m.writeValueAsString(Beans.make(i));
-        System.out.println("warmup sanity OK (both libraries exercised once)");
+        // Serialize one sample per deser type to seed Beans.DESER_JSON, then confirm the
+        // deser path round-trips. The deser workers reuse these strings (no re-serialize).
+        for (int i = 0; i < Beans.DESER_COUNT; i++) {
+            Beans.DESER_JSON[i] = m.writeValueAsString(Beans.deserSample(i));
+            m.readValue(Beans.DESER_JSON[i], Beans.deserType(i));
+        }
+        System.out.println("warmup sanity OK (caffeine + blackbird serialize + blackbird deserialize exercised once)");
     }
 
     // ---- reporting -----------------------------------------------------------
@@ -199,14 +244,14 @@ public final class RealLibStress {
     }
 
     static void monitor() {
-        long lastC = 0, lastB = 0, lastT = System.nanoTime();
+        long lastC = 0, lastB = 0, lastD = 0, lastT = System.nanoTime();
         while (running && !FAILED.get()) {
             try { Thread.sleep(5_000); } catch (InterruptedException e) { return; }
-            long c = caffeineBuilds.get(), bb = blackbirdSers.get(), now = System.nanoTime();
+            long c = caffeineBuilds.get(), bb = blackbirdSers.get(), bd = blackbirdDesers.get(), now = System.nanoTime();
             double dt = (now - lastT) / 1e9;
-            System.out.printf("[%4.0fs] caffeineBuilds=%,d (+%,.0f/s) blackbirdSers=%,d (+%,.0f/s)%n",
-                    (now - startNanos) / 1e9, c, (c - lastC) / dt, bb, (bb - lastB) / dt);
-            lastC = c; lastB = bb; lastT = now;
+            System.out.printf("[%4.0fs] caffeineBuilds=%,d (+%,.0f/s) blackbirdSers=%,d (+%,.0f/s) blackbirdDesers=%,d (+%,.0f/s)%n",
+                    (now - startNanos) / 1e9, c, (c - lastC) / dt, bb, (bb - lastB) / dt, bd, (bd - lastD) / dt);
+            lastC = c; lastB = bb; lastD = bd; lastT = now;
         }
     }
 
