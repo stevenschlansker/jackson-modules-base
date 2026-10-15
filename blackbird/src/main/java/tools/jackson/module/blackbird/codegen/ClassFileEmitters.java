@@ -5,13 +5,14 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 
 /**
- * Locates the class-file emitter, {@code BeanReaderGenerator}. It uses the
- * ClassFile API ({@code java.lang.classfile}) and compiles at release 25 into
+ * Locates the class-file emitters, {@code BeanReaderGenerator} and
+ * {@code BeanWriterGenerator}. They use the ClassFile API
+ * ({@code java.lang.classfile}) and compile at release 25 into
  * {@code META-INF/versions/25} of the multi-release jar, so the rest of the
  * module can stay at release 17. On an older runtime the JVM does not see
- * it, and Blackbird cannot generate codecs (see
- * {@code BlackbirdModule.setupModule}). The base classes find it by name
- * because they cannot reference it at compile time.
+ * them, and Blackbird cannot generate codecs (see
+ * {@code BlackbirdModule.setupModule}). The base classes find them by name
+ * because they cannot reference them at compile time.
  */
 public final class ClassFileEmitters
 {
@@ -27,21 +28,27 @@ public final class ClassFileEmitters
 
     private static final MethodHandle READER =
             find("BeanReaderGenerator", ReaderCodegen.Plan.class);
+    private static final MethodHandle WRITER =
+            find("BeanWriterGenerator", WriterCodegen.Plan.class);
 
     private ClassFileEmitters() {}
 
     /**
-     * Whether this runtime sees the release-25 emitter: false on Java 17 to
+     * Whether this runtime sees the release-25 emitters: false on Java 17 to
      * 24, and on any Java version when the jar was repackaged without its
      * {@code META-INF/versions/25} entries.
      */
     public static boolean available() {
-        return READER != null;
+        return (READER != null) && (WRITER != null);
     }
 
-    // Returns null when a generated method is over MAX_METHOD_BYTES.
+    // Both return null when a generated method is over MAX_METHOD_BYTES.
     static byte[] emit(ReaderCodegen.Plan plan) {
         return invoke(READER, plan);
+    }
+
+    static byte[] emit(WriterCodegen.Plan plan) {
+        return invoke(WRITER, plan);
     }
 
     private static byte[] invoke(MethodHandle emitter, Object plan) {
